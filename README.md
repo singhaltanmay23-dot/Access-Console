@@ -99,10 +99,8 @@ __
 **Through GitHub**
 1. Ensure your application file is named index.html in the repository root directory.
 2. Push your project to a public GitHub repository.
-3. In the left navigation bar, select Pages under Code and automation and thn select Branch under Build and deployment
-4. **Further steps:**
-   Branch: main
-   Folder: / (root)
-5. Click Save and after 30–60 seconds. your live link will be available.
-
+3. In the left navigation bar, select Pages under Code and automation.
+4. Then select Branch under Build and deployment.
+5. Choose Branch as 'main' and Folder as '/root'
+6. Click Save and after 30–60 seconds your live link will be available.
 
