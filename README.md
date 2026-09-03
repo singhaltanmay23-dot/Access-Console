@@ -106,5 +106,3 @@ __
 5. Click Save and after 30–60 seconds. your live link will be available.
 
 
-
-
