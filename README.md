@@ -2,7 +2,7 @@
 
 https://singhaltanmay23-dot.github.io/Access-Console/
 
-### Access Console is a lightweight, single-file web application built with vanilla web technologies for client-side user registration, security hashing demonstration, and record management. It features an interactive cyber-themed interface, live cryptographic feedback, and a structured dashboard for inspecting registered credentials.
+*Access Console is a lightweight, single-file web application built with vanilla web technologies for client-side user registration, security hashing demonstration, and record management. It features an interactive cyber-themed interface, live cryptographic feedback, and a structured dashboard for inspecting registered credentials.*
 
 ---
 
@@ -91,3 +91,20 @@ Because the entire application is bundled into a single file with no external de
 
 5. **Accessible & Fluid UI Engineering:**
 * Utilized CSS grid, flexbox, custom properties (CSS variables), keyframe animations, and media queries (`prefers-reduced-motion`) to craft a polished, accessible design.
+
+__
+
+## Deployment Steps
+
+**Through GitHub**
+1. Ensure your application file is named index.html in the repository root directory.
+2. Push your project to a public GitHub repository.
+3. In the left navigation bar, select Pages under Code and automation and thn select Branch under Build and deployment
+4. **Further steps:**
+   Branch: main
+   Folder: / (root)
+5. Click Save and after 30–60 seconds. your live link will be available.
+
+
+
+
