@@ -9,13 +9,13 @@ Access Console is a lightweight, single-file web application built with vanilla 
 Because the entire application is bundled into a single file with no external dependencies or build tools, getting started is straightforward:
 
 1. **Clone or Download the Repository:**
-*Clone this repository to your local machine or download the `access-console.html` file.
+* Clone this repository to your local machine or download the `access-console.html` file.
 
 2. **Open the File:**
-*Double-click `access-console.html` or open it using any modern web browser (Google Chrome, Firefox, Safari, Microsoft Edge, Brave).
+* Double-click `access-console.html` or open it using any modern web browser (Google Chrome, Firefox, Safari, Microsoft Edge).
 
 3. **Local Storage Note:**
-*Open the file directly from your local filesystem or host it via a local web server (e.g., `npx serve` or Python's `python -m http.server`) to ensure data persists properly across page refreshes via the browser's `localStorage`.
+* Open the file directly from your local filesystem or host it via a local web server (e.g., `npx serve` or Python's `python -m http.server`) to ensure data persists properly across page refreshes via the browser's `localStorage`.
 
 ---
 
