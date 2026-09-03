@@ -1,0 +1,1072 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Access Console — sign up &amp; records</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0F1720;
+    --surface:#161F2B;
+    --surface-raised:#1C2733;
+    --ink:#E7ECF2;
+    --ink-soft:#8FA0B3;
+    --ink-faint:#586B7E;
+    --cyan:#3FD0C9;
+    --cyan-dim: rgba(63,208,201,0.12);
+    --violet:#9B8CFB;
+    --violet-dim: rgba(155,140,251,0.14);
+    --danger:#F0637A;
+    --danger-dim: rgba(240,99,122,0.12);
+    --border: rgba(231,236,242,0.10);
+    --border-soft: rgba(231,236,242,0.06);
+    --radius: 6px;
+    --sans: 'Space Grotesk', sans-serif;
+    --mono: 'JetBrains Mono', monospace;
+  }
+
+  *{ box-sizing:border-box; }
+
+  body{
+    margin:0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--sans);
+    font-size: 15px;
+    line-height:1.55;
+    min-height:100vh;
+  }
+
+  :focus-visible{ outline: 2px solid var(--cyan); outline-offset: 2px; }
+  button{ font-family:inherit; }
+
+  .page{ max-width: 980px; margin:0 auto; padding: 26px 20px 90px; }
+
+  /* ---------- header ---------- */
+
+  .topbar{
+    display:flex; align-items:flex-end; justify-content:space-between;
+    gap:20px; flex-wrap:wrap; padding-bottom:16px;
+    border-bottom:1px solid var(--border); margin-bottom:32px;
+  }
+
+  .wordmark{ display:flex; align-items:center; gap:10px; }
+  .wordmark svg{ color: var(--cyan); }
+  .wordmark .name{ font-weight:600; font-size:19px; letter-spacing:0.2px; }
+  .wordmark .tag{ font-family: var(--mono); font-size:11.5px; color: var(--ink-faint); margin-left:8px; }
+
+  nav.tabs{ position:relative; display:flex; gap:26px; }
+
+  .tab-btn{
+    background:none; border:none; cursor:pointer; padding:6px 2px 12px;
+    font-size:14px; color: var(--ink-soft); font-family: var(--sans);
+    display:flex; align-items:center; gap:8px; transition: color 0.15s ease;
+  }
+  .tab-btn.active{ color: var(--ink); }
+
+  .tab-btn .count{
+    font-family: var(--mono); font-size:11px; background: var(--cyan-dim);
+    color: var(--cyan); border-radius:999px; padding:1px 7px; min-width:18px; text-align:center;
+  }
+
+  .tab-indicator{
+    position:absolute; bottom:0; height:2px; background: var(--cyan);
+    transition: transform 0.28s cubic-bezier(.65,0,.35,1), width 0.28s cubic-bezier(.65,0,.35,1);
+  }
+
+  /* ---------- panels ---------- */
+
+  .panel{ display:none; }
+  .panel.active{ display:block; animation: rise 0.3s ease both; }
+  @keyframes rise{ from{ opacity:0; transform:translateY(6px);} to{ opacity:1; transform:translateY(0);} }
+
+  .card{
+    background: var(--surface);
+    border:1px solid var(--border);
+    border-radius: var(--radius);
+  }
+
+  /* ---------- signup: two-column entry ---------- */
+
+  .entry-grid{
+    display:grid;
+    grid-template-columns: 280px 1fr;
+    gap: 22px;
+    align-items:start;
+  }
+
+  @media (max-width: 760px){
+    .entry-grid{ grid-template-columns: 1fr; }
+  }
+
+  .scan-panel{
+    position:relative;
+    overflow:hidden;
+    padding: 22px 20px;
+    background: var(--surface-raised);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+  }
+
+  .scan-panel .label{
+    font-size:11.5px; color: var(--ink-soft); margin:0 0 14px;
+    display:flex; align-items:center; gap:7px;
+  }
+  .scan-panel .label .dot{
+    width:6px; height:6px; border-radius:50%; background: var(--cyan);
+    box-shadow: 0 0 0 3px var(--cyan-dim);
+  }
+
+  .ticker{
+    font-family: var(--mono);
+    font-size: 12.5px;
+    line-height:1.7;
+    color: var(--violet);
+    word-break: break-all;
+    min-height: 65px;
+    transition: color 0.15s ease;
+  }
+
+  .ticker.is-placeholder{ color: var(--ink-faint); }
+
+  .ticker.pulse{ animation: hashpulse 0.35s ease; }
+  @keyframes hashpulse{
+    0%{ color: var(--cyan); }
+    100%{ color: var(--violet); }
+  }
+
+  .scan-caption{
+    font-size:11.5px; color: var(--ink-faint); margin-top:14px;
+    padding-top:14px; border-top:1px solid var(--border-soft);
+  }
+
+  .scanline{
+    position:absolute; left:0; right:0; height:34px; top:-34px;
+    background: linear-gradient(to bottom, transparent, rgba(63,208,201,0.10), transparent);
+    animation: sweep 3.2s linear infinite;
+    pointer-events:none;
+  }
+  @keyframes sweep{
+    0%{ transform: translateY(0); }
+    100%{ transform: translateY(240px); }
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    .scanline{ animation:none; opacity:0; }
+  }
+
+  /* ---------- form ---------- */
+
+  .form-card{ padding: 26px 26px 24px; }
+
+  .panel h2{ font-size:19px; font-weight:600; margin:0 0 4px; }
+  .panel .lede{ margin:0 0 22px; color: var(--ink-soft); font-size:13px; }
+
+  .field{ margin-bottom:18px; }
+  .field label{ display:block; font-size:12px; color: var(--ink-soft); margin-bottom:6px; }
+
+  .field-shell{
+    position:relative; display:flex; align-items:center;
+    border:1px solid var(--border); border-radius: var(--radius);
+    background: var(--bg); transition: border-color 0.15s ease;
+  }
+  .field-shell:focus-within{ border-color: var(--cyan); }
+  .field.has-error .field-shell{ border-color: var(--danger); }
+  .field.has-success .field-shell{ border-color: var(--cyan); }
+
+  .field input{
+    flex:1; min-width:0; border:none; background:transparent; outline:none;
+    font-family: var(--sans); font-size:14.5px; color: var(--ink); padding:11px 12px;
+  }
+  .field input::placeholder{ color: var(--ink-faint); }
+
+  .field-icon{ display:flex; align-items:center; padding-right:10px; color: var(--ink-faint); flex-shrink:0; }
+  .field.has-error .field-icon{ color: var(--danger); }
+  .field.has-success .field-icon{ color: var(--cyan); }
+
+  .spin{ animation: spin 0.8s linear infinite; }
+  @keyframes spin{ to{ transform: rotate(360deg); } }
+
+  .toggle-visibility{
+    background:none; border:none; cursor:pointer; color: var(--ink-faint);
+    display:flex; align-items:center; padding:8px 10px;
+  }
+  .toggle-visibility:hover{ color: var(--ink); }
+
+  .field-msg{ display:block; min-height:16px; font-size:11.5px; margin-top:6px; color: var(--ink-faint); }
+  .field.has-error .field-msg{ color: var(--danger); }
+
+  .strength{ margin-top:8px; display:flex; align-items:center; gap:8px; }
+  .strength-track{ flex:1; height:3px; background: var(--border); border-radius:2px; overflow:hidden; }
+  .strength-fill{ height:100%; width:0%; background: var(--danger); transition: width 0.2s ease, background-color 0.2s ease; }
+  .strength-label{ font-size:10.5px; color: var(--ink-faint); min-width:46px; text-align:right; }
+
+  .submit-btn{
+    width:100%; margin-top:6px; padding:12px 16px;
+    background: var(--cyan); color:#08211E; border:none; border-radius: var(--radius);
+    font-size:14px; font-weight:600; letter-spacing:0.2px; cursor:pointer;
+    transition: background-color 0.15s ease, opacity 0.15s ease;
+  }
+  .submit-btn:hover{ background:#5CE0D9; }
+  .submit-btn:disabled{ opacity:0.55; cursor:default; }
+
+  /* ---------- dashboard ---------- */
+
+  .dash-card{ padding: 24px 24px 20px; }
+
+  .dash-head{
+    display:flex; justify-content:space-between; align-items:center;
+    flex-wrap:wrap; gap:14px; margin-bottom:18px;
+  }
+
+  .dash-head h2{ margin:0; }
+
+  .search-shell{
+    display:flex; align-items:center; gap:8px;
+    border:1px solid var(--border); border-radius: var(--radius);
+    padding: 8px 12px; background: var(--bg); min-width: 220px;
+    color: var(--ink-faint);
+  }
+  .search-shell input{
+    border:none; background:transparent; outline:none; color: var(--ink);
+    font-family: var(--sans); font-size:13px; width:100%;
+  }
+  .search-shell input::placeholder{ color: var(--ink-faint); }
+  .search-shell kbd{
+    font-family: var(--mono); font-size:10px; color: var(--ink-faint);
+    border:1px solid var(--border); border-radius:4px; padding:1px 5px;
+  }
+
+  table.records{ width:100%; border-collapse:collapse; font-size:13.5px; }
+
+  table.records thead th{
+    text-align:left; font-weight:500; color: var(--ink-soft); font-size:11px;
+    padding:0 10px 10px; border-bottom:1px solid var(--border);
+  }
+  table.records thead th.col-no{ width:40px; }
+  table.records thead th.col-action{ width:110px; text-align:right; }
+
+  th.sortable{ cursor:pointer; user-select:none; display: table-cell; }
+  th.sortable .th-inner{ display:inline-flex; align-items:center; gap:5px; }
+  th.sortable:hover{ color: var(--ink); }
+  th.sortable .caret{ opacity:0.35; transition: opacity 0.15s ease, transform 0.15s ease; }
+  th.sortable.sort-asc .caret{ opacity:1; }
+  th.sortable.sort-desc .caret{ opacity:1; transform: rotate(180deg); }
+
+  table.records tbody td{
+    padding:12px 10px; border-bottom:1px solid var(--border-soft); color: var(--ink);
+  }
+  table.records tbody td.col-no{ color: var(--ink-faint); font-family: var(--mono); font-size:12px; }
+  table.records tbody tr:last-child td{ border-bottom:none; }
+
+  .hash-cell{ display:flex; align-items:center; gap:8px; }
+  .hash-cell .hash-value{
+    font-family: var(--mono); font-size:11.5px; color: var(--ink-soft);
+  }
+  .copy-btn{
+    background:none; border:none; cursor:pointer; color: var(--ink-faint);
+    display:flex; align-items:center; padding:3px; flex-shrink:0;
+    transition: color 0.15s ease;
+  }
+  .copy-btn:hover{ color: var(--cyan); }
+  .copy-btn.copied{ color: var(--cyan); }
+
+  .delete-btn{
+    background:none; border:1px solid var(--border); border-radius: var(--radius);
+    color: var(--danger); padding:6px 10px; font-size:12px; font-family: var(--sans);
+    cursor:pointer; display:inline-flex; align-items:center; gap:6px;
+    transition: background-color 0.15s ease, border-color 0.15s ease;
+  }
+  .delete-btn:hover{ background: var(--danger-dim); border-color: rgba(240,99,122,0.35); }
+
+  tr.row-exit{ opacity:0; transform: translateX(6px); transition: opacity 0.22s ease, transform 0.22s ease; }
+  tr.row-new td{ animation: settle 1.4s ease; }
+  @keyframes settle{ 0%{ background-color: var(--cyan-dim); } 100%{ background-color:transparent; } }
+
+  .empty-state{ text-align:center; padding:44px 20px 28px; color: var(--ink-soft); }
+  .empty-state svg{ color: var(--ink-faint); margin-bottom:14px; }
+  .empty-state p{ margin:0 auto; max-width:280px; font-size:13px; }
+  .empty-state .empty-title{ font-weight:600; font-size:16px; color: var(--ink); margin-bottom:6px; }
+
+  /* ---------- toasts ---------- */
+
+  .toast-stack{
+    position:fixed; right:18px; bottom:18px; z-index:50;
+    display:flex; flex-direction:column-reverse; gap:10px;
+    width: min(320px, calc(100vw - 36px));
+  }
+
+  .toast{
+    background: var(--surface-raised); border:1px solid var(--border);
+    border-radius: var(--radius); padding:12px 14px;
+    display:flex; align-items:center; gap:10px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.35);
+    animation: toast-in 0.22s ease both;
+  }
+  .toast.leaving{ animation: toast-out 0.18s ease both; }
+  @keyframes toast-in{ from{ opacity:0; transform: translateY(8px); } to{ opacity:1; transform:translateY(0); } }
+  @keyframes toast-out{ to{ opacity:0; transform: translateY(6px); } }
+
+  .toast .dot{ width:7px; height:7px; border-radius:50%; flex-shrink:0; }
+  .toast.success .dot{ background: var(--cyan); }
+  .toast.error .dot{ background: var(--danger); }
+  .toast .msg{ flex:1; font-size:13px; }
+  .toast .action{
+    background:none; border:none; color: var(--cyan); font-size:12.5px;
+    font-weight:600; cursor:pointer; font-family: var(--sans); flex-shrink:0;
+  }
+  .toast .close{
+    background:none; border:none; color: var(--ink-faint); cursor:pointer;
+    padding:2px; display:flex; flex-shrink:0;
+  }
+
+  /* ---------- storage note ---------- */
+
+  .storage-note{
+    max-width: 640px; margin: 0 auto 18px; padding:10px 14px;
+    background: var(--danger-dim); border:1px solid rgba(240,99,122,0.3);
+    border-radius: var(--radius); font-size:12px; color:#FFB6C2; display:none;
+  }
+  .storage-note.show{ display:block; }
+
+  /* ---------- mobile table ---------- */
+
+  @media (max-width: 640px){
+    .page{ padding:20px 14px 70px; }
+    .dash-card{ padding:18px 14px 14px; }
+    table.records thead{ display:none; }
+    table.records, table.records tbody, table.records tr, table.records td{ display:block; width:100%; }
+    table.records tr{ border:1px solid var(--border-soft); border-radius: var(--radius); padding:12px 12px 6px; margin-bottom:12px; }
+    table.records tbody tr:last-child{ margin-bottom:0; }
+    table.records td{ border-bottom:none; padding:5px 0; display:flex; justify-content:space-between; gap:12px; }
+    table.records td.col-no{ display:none; }
+    table.records td::before{ content: attr(data-label); color: var(--ink-faint); font-size:11px; flex-shrink:0; }
+    table.records td.col-action{ justify-content:flex-end; padding-top:10px; }
+    table.records td.col-action::before{ content:""; }
+    .dash-head{ flex-direction:column; align-items:stretch; }
+  }
+</style>
+</head>
+<body>
+
+<div class="page">
+  <header class="topbar">
+    <div class="wordmark">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="10" width="18" height="10" rx="2"/><path d="M7 10V7a5 5 0 0 1 10 0v3"/></svg>
+      <span class="name">Access Console</span>
+      <span class="tag">signup &amp; records</span>
+    </div>
+    <nav class="tabs" id="tabs">
+      <button class="tab-btn active" data-panel="signup" type="button">New account</button>
+      <button class="tab-btn" data-panel="dashboard" type="button">Records <span class="count" id="tab-count">0</span></button>
+      <span class="tab-indicator" id="tab-indicator"></span>
+    </nav>
+  </header>
+
+  <main>
+    <div class="storage-note" id="storage-note">
+      This preview can't hold saved data — entries will disappear on reload here. Download the file and open it directly in a browser to store records for real.
+    </div>
+
+    <section class="panel active" id="panel-signup">
+      <div class="entry-grid">
+        <div class="scan-panel">
+          <div class="scanline" aria-hidden="true"></div>
+          <p class="label"><span class="dot"></span>Live hash preview</p>
+          <div class="ticker is-placeholder" id="hash-ticker">Awaiting input…</div>
+          <p class="scan-caption">Illustrative only — recomputed from what's typed. The value actually stored below adds a random salt first.</p>
+        </div>
+
+        <div class="card form-card">
+          <h2>New account</h2>
+          <p class="lede">Create an account to add a record.</p>
+
+          <form id="signup-form" novalidate>
+            <div class="field" id="field-username">
+              <label for="input-username">Username</label>
+              <div class="field-shell">
+                <input type="text" id="input-username" name="username" placeholder="e.g. jordan_lee" autocomplete="off">
+                <span class="field-icon" id="icon-username"></span>
+              </div>
+              <span class="field-msg" id="msg-username">Required.</span>
+            </div>
+
+            <div class="field" id="field-email">
+              <label for="input-email">Email</label>
+              <div class="field-shell">
+                <input type="text" id="input-email" name="email" placeholder="e.g. jordan@studio.com" autocomplete="off">
+                <span class="field-icon" id="icon-email"></span>
+              </div>
+              <span class="field-msg" id="msg-email">A valid email address.</span>
+            </div>
+
+            <div class="field" id="field-password">
+              <label for="input-password">Password</label>
+              <div class="field-shell">
+                <input type="password" id="input-password" name="password" placeholder="At least 6 characters" autocomplete="off">
+                <button type="button" class="toggle-visibility" id="toggle-password" aria-label="Show password">
+                  <svg id="eye-icon" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+                </button>
+              </div>
+              <div class="strength" id="strength-wrap" style="visibility:hidden;">
+                <div class="strength-track"><div class="strength-fill" id="strength-fill"></div></div>
+                <span class="strength-label" id="strength-label">Weak</span>
+              </div>
+              <span class="field-msg" id="msg-password">Hashed with a random salt before it's stored.</span>
+            </div>
+
+            <button type="submit" class="submit-btn" id="submit-btn">Create account</button>
+          </form>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel" id="panel-dashboard">
+      <div class="card dash-card">
+        <div class="dash-head">
+          <h2>Records</h2>
+          <div class="search-shell">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+            <input type="text" id="search-input" placeholder="Search records">
+            <kbd>/</kbd>
+          </div>
+        </div>
+        <div id="dash-body"></div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<div class="toast-stack" id="toast-stack" aria-live="polite"></div>
+
+<script>
+(function(){
+  "use strict";
+
+  var STORAGE_KEY = "access_console_users_v1";
+  var users = [];
+  var storageOK = true;
+  var sortState = { key: null, dir: 1 };
+  var searchQuery = "";
+  var lastDeleted = null; // { record, index, timeoutId }
+  var hashRequestId = 0;
+
+  // ---------- storage ----------
+
+  function storageAvailable(){
+    try{
+      var t = "__ac_probe__";
+      localStorage.setItem(t, t);
+      localStorage.removeItem(t);
+      return true;
+    }catch(e){ return false; }
+  }
+
+  function loadUsers(){
+    if(!storageOK) return [];
+    try{
+      var raw = localStorage.getItem(STORAGE_KEY);
+      return raw ? JSON.parse(raw) : [];
+    }catch(e){ return []; }
+  }
+
+  function persistUsers(){
+    if(!storageOK) return;
+    try{
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(users));
+    }catch(e){
+      storageOK = false;
+      document.getElementById("storage-note").classList.add("show");
+    }
+  }
+
+  // ---------- hashing ----------
+
+  function bufferToHex(buffer){
+    var bytes = new Uint8Array(buffer);
+    var hex = "";
+    for(var i = 0; i < bytes.length; i++){ hex += bytes[i].toString(16).padStart(2, "0"); }
+    return hex;
+  }
+
+  function randomSaltHex(){
+    return bufferToHex(crypto.getRandomValues(new Uint8Array(16)).buffer);
+  }
+
+  function sha256Hex(text){
+    return crypto.subtle.digest("SHA-256", new TextEncoder().encode(text)).then(bufferToHex);
+  }
+
+  function hashPassword(password){
+    var salt = randomSaltHex();
+    return sha256Hex(salt + password).then(function(hash){ return { salt: salt, hash: hash }; });
+  }
+
+  function makeId(){
+    if(crypto.randomUUID) return crypto.randomUUID();
+    return "id-" + Date.now() + "-" + Math.random().toString(16).slice(2);
+  }
+
+  // ---------- live hash ticker (race-safe) ----------
+
+  function updateTicker(value){
+    var ticker = document.getElementById("hash-ticker");
+    var myRequest = ++hashRequestId;
+
+    if(!value){
+      ticker.classList.add("is-placeholder");
+      ticker.textContent = "Awaiting input…";
+      return;
+    }
+
+    sha256Hex(value).then(function(hex){
+      if(myRequest !== hashRequestId) return; // a newer keystroke already superseded this
+      ticker.classList.remove("is-placeholder");
+      ticker.textContent = hex;
+      ticker.classList.remove("pulse");
+      void ticker.offsetWidth; // restart animation
+      ticker.classList.add("pulse");
+    }).catch(function(){});
+  }
+
+  // ---------- validation ----------
+
+  var EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+  function validateUsername(v){
+    v = v.trim();
+    if(!v) return "Enter a username.";
+    return null;
+  }
+
+  function validateEmail(v){
+    v = v.trim();
+    if(!v) return "Enter an email address.";
+    if(!EMAIL_RE.test(v)) return "Enter a valid email address.";
+    return null;
+  }
+
+  function validatePassword(v){
+    if(v.length < 6) return "Use at least 6 characters.";
+    return null;
+  }
+
+  function isDuplicateUsername(v){
+    var u = v.trim().toLowerCase();
+    return users.some(function(x){ return x.username.toLowerCase() === u; });
+  }
+
+  function isDuplicateEmail(v){
+    var e = v.trim().toLowerCase();
+    return users.some(function(x){ return x.email.toLowerCase() === e; });
+  }
+
+  function findDuplicate(username, email){
+    if(isDuplicateUsername(username)) return "That username is already registered.";
+    if(isDuplicateEmail(email)) return "That email is already registered.";
+    return null;
+  }
+
+  var CHECK_SVG = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>';
+  var CROSS_SVG = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg>';
+  var SPIN_SVG = '<svg class="spin" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 2a10 10 0 0 1 10 10"/></svg>';
+
+  function setFieldState(fieldId, iconId, msgId, state, message, defaultMessage){
+    var field = document.getElementById(fieldId);
+    var icon = document.getElementById(iconId);
+    var msg = document.getElementById(msgId);
+    field.classList.remove("has-error", "has-success");
+    if(state === "checking"){
+      icon.innerHTML = SPIN_SVG;
+      msg.textContent = "Checking…";
+    }else if(state === "error"){
+      field.classList.add("has-error");
+      icon.innerHTML = CROSS_SVG;
+      msg.textContent = message;
+    }else if(state === "success"){
+      field.classList.add("has-success");
+      icon.innerHTML = CHECK_SVG;
+      msg.textContent = defaultMessage;
+    }else{
+      icon.innerHTML = "";
+      msg.textContent = defaultMessage;
+    }
+  }
+
+  var usernameTimer = null;
+  function liveValidateUsername(){
+    var v = document.getElementById("input-username").value;
+    clearTimeout(usernameTimer);
+    if(!v){ setFieldState("field-username", "icon-username", "msg-username", "neutral", "", "Required."); return; }
+    setFieldState("field-username", "icon-username", "msg-username", "checking", "", "Required.");
+    usernameTimer = setTimeout(function(){
+      var current = document.getElementById("input-username").value;
+      var err = validateUsername(current) || (isDuplicateUsername(current) ? "That username is already registered." : null);
+      setFieldState("field-username", "icon-username", "msg-username", err ? "error" : "success", err, "Available.");
+    }, 350);
+  }
+
+  var emailTimer = null;
+  function liveValidateEmail(){
+    var v = document.getElementById("input-email").value;
+    clearTimeout(emailTimer);
+    if(!v){ setFieldState("field-email", "icon-email", "msg-email", "neutral", "", "A valid email address."); return; }
+    setFieldState("field-email", "icon-email", "msg-email", "checking", "", "A valid email address.");
+    emailTimer = setTimeout(function(){
+      var current = document.getElementById("input-email").value;
+      var err = validateEmail(current) || (isDuplicateEmail(current) ? "That email is already registered." : null);
+      setFieldState("field-email", "icon-email", "msg-email", err ? "error" : "success", err, "Available.");
+    }, 350);
+  }
+
+  function passwordScore(v){
+    var score = 0;
+    if(v.length >= 6) score++;
+    if(v.length >= 10) score++;
+    if(/[a-z]/.test(v) && /[A-Z]/.test(v)) score++;
+    if(/[0-9]/.test(v) && /[^a-zA-Z0-9]/.test(v)) score++;
+    return Math.min(score, 4);
+  }
+
+  function liveValidatePassword(){
+    var v = document.getElementById("input-password").value;
+    updateTicker(v);
+
+    var wrap = document.getElementById("strength-wrap");
+    var fill = document.getElementById("strength-fill");
+    var label = document.getElementById("strength-label");
+    var field = document.getElementById("field-password");
+    var msg = document.getElementById("msg-password");
+
+    if(!v){
+      wrap.style.visibility = "hidden";
+      field.classList.remove("has-error", "has-success");
+      msg.textContent = "Hashed with a random salt before it's stored.";
+      return;
+    }
+
+    wrap.style.visibility = "visible";
+    var score = passwordScore(v);
+    var idx = Math.max(score - 1, 0);
+    var pct = [15, 40, 70, 100][idx];
+    var colors = ["#F0637A", "#F0637A", "#E0A63F", "#3FD0C9"];
+    var labels = ["Weak", "Weak", "Medium", "Strong"];
+    fill.style.width = pct + "%";
+    fill.style.backgroundColor = colors[idx];
+    label.textContent = labels[idx];
+
+    var err = validatePassword(v);
+    field.classList.remove("has-error", "has-success");
+    if(err){
+      field.classList.add("has-error");
+      msg.textContent = err;
+    }else{
+      field.classList.add("has-success");
+      msg.textContent = "Hashed with a random salt before it's stored.";
+    }
+  }
+
+  // ---------- tabs ----------
+
+  function moveIndicator(btn){
+    var nav = document.getElementById("tabs");
+    var indicator = document.getElementById("tab-indicator");
+    var navRect = nav.getBoundingClientRect();
+    var btnRect = btn.getBoundingClientRect();
+    indicator.style.width = btnRect.width + "px";
+    indicator.style.transform = "translateX(" + (btnRect.left - navRect.left) + "px)";
+  }
+
+  function switchTab(name){
+    document.querySelectorAll(".tab-btn").forEach(function(btn){
+      var active = btn.dataset.panel === name;
+      btn.classList.toggle("active", active);
+      if(active) moveIndicator(btn);
+    });
+    document.querySelectorAll(".panel").forEach(function(panel){
+      panel.classList.toggle("active", panel.id === "panel-" + name);
+    });
+    if(name === "dashboard"){
+      setTimeout(function(){ document.getElementById("search-input").focus(); }, 50);
+    }
+  }
+
+  // ---------- toasts ----------
+
+  function showToast(opts){
+    var stack = document.getElementById("toast-stack");
+    var el = document.createElement("div");
+    el.className = "toast " + (opts.type || "success");
+
+    var dot = document.createElement("span");
+    dot.className = "dot";
+
+    var msg = document.createElement("span");
+    msg.className = "msg";
+    msg.textContent = opts.message;
+
+    el.appendChild(dot);
+    el.appendChild(msg);
+
+    var timeoutId;
+    var remove = function(){
+      clearTimeout(timeoutId);
+      el.classList.add("leaving");
+      setTimeout(function(){ if(el.parentNode) el.parentNode.removeChild(el); }, 180);
+    };
+
+    if(opts.actionLabel){
+      var action = document.createElement("button");
+      action.className = "action";
+      action.type = "button";
+      action.textContent = opts.actionLabel;
+      action.addEventListener("click", function(){
+        if(opts.onAction) opts.onAction();
+        remove();
+      });
+      el.appendChild(action);
+    }
+
+    var close = document.createElement("button");
+    close.className = "close";
+    close.type = "button";
+    close.setAttribute("aria-label", "Dismiss");
+    close.innerHTML = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg>';
+    close.addEventListener("click", function(){
+      if(opts.onDismiss) opts.onDismiss();
+      remove();
+    });
+    el.appendChild(close);
+
+    stack.appendChild(el);
+    timeoutId = setTimeout(function(){
+      if(opts.onDismiss) opts.onDismiss();
+      remove();
+    }, opts.duration || 4000);
+
+    return remove;
+  }
+
+  // ---------- render ----------
+
+  function truncatedHash(user){ return user.hash.slice(0, 14) + "…"; }
+
+  function getVisibleUsers(){
+    var list = users.slice();
+    if(searchQuery){
+      var q = searchQuery.toLowerCase();
+      list = list.filter(function(u){
+        return u.username.toLowerCase().indexOf(q) !== -1 || u.email.toLowerCase().indexOf(q) !== -1;
+      });
+    }
+    if(sortState.key){
+      list.sort(function(a, b){
+        var av = a[sortState.key].toLowerCase();
+        var bv = b[sortState.key].toLowerCase();
+        if(av < bv) return -1 * sortState.dir;
+        if(av > bv) return 1 * sortState.dir;
+        return 0;
+      });
+    }
+    return list;
+  }
+
+  function renderDashboard(highlightId){
+    var body = document.getElementById("dash-body");
+    document.getElementById("tab-count").textContent = String(users.length);
+
+    if(users.length === 0){
+      body.innerHTML =
+        '<div class="empty-state">' +
+        '<svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><rect x="3" y="10" width="18" height="10" rx="2"/><path d="M7 10V7a5 5 0 0 1 10 0v3"/></svg>' +
+        '<p class="empty-title">No records yet</p>' +
+        '<p>Create the first account to populate the console.</p>' +
+        '</div>';
+      return;
+    }
+
+    var visible = getVisibleUsers();
+
+    if(visible.length === 0){
+      body.innerHTML =
+        '<div class="empty-state">' +
+        '<svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>' +
+        '<p class="empty-title">No matches</p>' +
+        '<p>Nothing matches &ldquo;' + searchQuery + '&rdquo;.</p>' +
+        '</div>';
+      return;
+    }
+
+    var table = document.createElement("table");
+    table.className = "records";
+
+    var thead = document.createElement("thead");
+    var headRow = document.createElement("tr");
+
+    function sortHeader(key, label){
+      var th = document.createElement("th");
+      th.className = "sortable";
+      if(sortState.key === key) th.classList.add(sortState.dir === 1 ? "sort-asc" : "sort-desc");
+      th.innerHTML = '<span class="th-inner">' + label + ' <svg class="caret" width="9" height="9" viewBox="0 0 24 24" fill="currentColor"><path d="M12 16 4 8h16Z"/></svg></span>';
+      th.addEventListener("click", function(){
+        if(sortState.key === key){ sortState.dir *= -1; }
+        else{ sortState.key = key; sortState.dir = 1; }
+        renderDashboard();
+      });
+      return th;
+    }
+
+    var thNo = document.createElement("th");
+    thNo.className = "col-no";
+    thNo.textContent = "No.";
+    headRow.appendChild(thNo);
+    headRow.appendChild(sortHeader("username", "Username"));
+    headRow.appendChild(sortHeader("email", "Email"));
+    var thPw = document.createElement("th");
+    thPw.textContent = "Password (hashed)";
+    headRow.appendChild(thPw);
+    var thAction = document.createElement("th");
+    thAction.className = "col-action";
+    headRow.appendChild(thAction);
+    thead.appendChild(headRow);
+    table.appendChild(thead);
+
+    var tbody = document.createElement("tbody");
+    visible.forEach(function(user, idx){
+      var tr = document.createElement("tr");
+      tr.dataset.id = user.id;
+      if(user.id === highlightId) tr.className = "row-new";
+
+      var tdNo = document.createElement("td");
+      tdNo.className = "col-no";
+      tdNo.textContent = String(idx + 1).padStart(2, "0");
+
+      var tdUser = document.createElement("td");
+      tdUser.setAttribute("data-label", "Username");
+      tdUser.textContent = user.username;
+
+      var tdEmail = document.createElement("td");
+      tdEmail.setAttribute("data-label", "Email");
+      tdEmail.textContent = user.email;
+
+      var tdHash = document.createElement("td");
+      tdHash.setAttribute("data-label", "Password");
+      var hashCell = document.createElement("span");
+      hashCell.className = "hash-cell";
+      var hashSpan = document.createElement("span");
+      hashSpan.className = "hash-value";
+      hashSpan.title = "salt:" + user.salt + " hash:" + user.hash;
+      hashSpan.textContent = truncatedHash(user);
+      var copyBtn = document.createElement("button");
+      copyBtn.type = "button";
+      copyBtn.className = "copy-btn";
+      copyBtn.setAttribute("aria-label", "Copy full hash");
+      copyBtn.innerHTML = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg>';
+      copyBtn.addEventListener("click", function(){
+        var text = user.salt + ":" + user.hash;
+        var done = function(){
+          copyBtn.classList.add("copied");
+          copyBtn.innerHTML = CHECK_SVG;
+          setTimeout(function(){
+            copyBtn.classList.remove("copied");
+            copyBtn.innerHTML = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg>';
+          }, 1200);
+        };
+        if(navigator.clipboard && navigator.clipboard.writeText){
+          navigator.clipboard.writeText(text).then(done).catch(function(){});
+        }
+      });
+      hashCell.appendChild(hashSpan);
+      hashCell.appendChild(copyBtn);
+      tdHash.appendChild(hashCell);
+
+      var tdAction = document.createElement("td");
+      tdAction.className = "col-action";
+      var delBtn = document.createElement("button");
+      delBtn.className = "delete-btn";
+      delBtn.type = "button";
+      delBtn.setAttribute("aria-label", "Delete " + user.username + "'s record");
+      delBtn.innerHTML =
+        '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2m3 0-1 14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2L4 6"/></svg>' +
+        '<span>Delete</span>';
+      delBtn.addEventListener("click", function(){ requestDelete(user.id); });
+      tdAction.appendChild(delBtn);
+
+      tr.appendChild(tdNo);
+      tr.appendChild(tdUser);
+      tr.appendChild(tdEmail);
+      tr.appendChild(tdHash);
+      tr.appendChild(tdAction);
+      tbody.appendChild(tr);
+    });
+
+    table.appendChild(tbody);
+    body.innerHTML = "";
+    body.appendChild(table);
+  }
+
+  // ---------- delete + undo ----------
+
+  function requestDelete(id){
+    var index = users.findIndex(function(u){ return u.id === id; });
+    if(index === -1) return;
+    var record = users[index];
+
+    var row = document.querySelector('tr[data-id="' + id + '"]');
+    var finish = function(){
+      users.splice(index, 1);
+      persistUsers();
+      renderDashboard();
+
+      lastDeleted = { record: record, index: index };
+      var dismiss = showToast({
+        type: "success",
+        message: "Deleted " + record.username,
+        actionLabel: "Undo",
+        duration: 5000,
+        onAction: function(){
+          users.splice(Math.min(lastDeleted.index, users.length), 0, lastDeleted.record);
+          persistUsers();
+          renderDashboard(lastDeleted.record.id);
+          lastDeleted = null;
+        },
+        onDismiss: function(){ lastDeleted = null; }
+      });
+    };
+
+    if(row){
+      row.classList.add("row-exit");
+      row.addEventListener("transitionend", finish, { once: true });
+      setTimeout(finish, 260);
+    }else{
+      finish();
+    }
+  }
+
+  // ---------- form submit ----------
+
+  function resetForm(){
+    document.getElementById("signup-form").reset();
+    ["username", "email", "password"].forEach(function(f){
+      document.getElementById("field-" + f).classList.remove("has-error", "has-success");
+    });
+    document.getElementById("icon-username").innerHTML = "";
+    document.getElementById("icon-email").innerHTML = "";
+    document.getElementById("msg-username").textContent = "Required.";
+    document.getElementById("msg-email").textContent = "A valid email address.";
+    document.getElementById("msg-password").textContent = "Hashed with a random salt before it's stored.";
+    document.getElementById("strength-wrap").style.visibility = "hidden";
+    updateTicker("");
+  }
+
+  function handleSubmit(e){
+    e.preventDefault();
+    var username = document.getElementById("input-username").value;
+    var email = document.getElementById("input-email").value;
+    var password = document.getElementById("input-password").value;
+
+    var uErr = validateUsername(username);
+    var eErr = validateEmail(email);
+    var pErr = validatePassword(password);
+
+    setFieldState("field-username", "icon-username", "msg-username", uErr ? "error" : "success", uErr, "Available.");
+    setFieldState("field-email", "icon-email", "msg-email", eErr ? "error" : "success", eErr, "Available.");
+    liveValidatePassword();
+
+    if(uErr || eErr || pErr){
+      showToast({ type:"error", message:"Fix the highlighted fields.", duration:3000 });
+      return;
+    }
+
+    var dupErr = findDuplicate(username, email);
+    if(dupErr){
+      showToast({ type:"error", message:dupErr, duration:3500 });
+      return;
+    }
+
+    var submitBtn = document.getElementById("submit-btn");
+    submitBtn.disabled = true;
+    submitBtn.textContent = "Encrypting…";
+
+    hashPassword(password).then(function(result){
+      var record = {
+        id: makeId(),
+        username: username.trim(),
+        email: email.trim(),
+        salt: result.salt,
+        hash: result.hash
+      };
+      users.push(record);
+      persistUsers();
+      resetForm();
+      submitBtn.disabled = false;
+      submitBtn.textContent = "Create account";
+      showToast({ type:"success", message:"Account created for " + record.username, duration:3500 });
+      switchTab("dashboard");
+      renderDashboard(record.id);
+    }).catch(function(){
+      submitBtn.disabled = false;
+      submitBtn.textContent = "Create account";
+      showToast({ type:"error", message:"This browser can't hash securely. Try a modern browser.", duration:4000 });
+    });
+  }
+
+  // ---------- wire up ----------
+
+  function init(){
+    storageOK = storageAvailable();
+    if(!storageOK) document.getElementById("storage-note").classList.add("show");
+    users = loadUsers();
+
+    document.getElementById("signup-form").addEventListener("submit", handleSubmit);
+    document.getElementById("input-username").addEventListener("input", liveValidateUsername);
+    document.getElementById("input-email").addEventListener("input", liveValidateEmail);
+    document.getElementById("input-password").addEventListener("input", liveValidatePassword);
+
+    document.getElementById("toggle-password").addEventListener("click", function(){
+      var input = document.getElementById("input-password");
+      var isPw = input.type === "password";
+      input.type = isPw ? "text" : "password";
+      this.setAttribute("aria-label", isPw ? "Hide password" : "Show password");
+      document.getElementById("eye-icon").innerHTML = isPw
+        ? '<path d="M1 1l22 22M9.9 5.2A11 11 0 0 1 23 12s-1.5 2.6-4.2 4.6M6.6 6.6C3.6 8.4 1 12 1 12s4 7 11 7c1.8 0 3.4-.4 4.8-1.1"/><path d="M14.1 14.1a3 3 0 1 1-4.2-4.2"/>'
+        : '<path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7Z"/><circle cx="12" cy="12" r="3"/>';
+    });
+
+    document.querySelectorAll(".tab-btn").forEach(function(btn){
+      btn.addEventListener("click", function(){ switchTab(btn.dataset.panel); });
+    });
+
+    document.getElementById("search-input").addEventListener("input", function(e){
+      searchQuery = e.target.value.trim();
+      renderDashboard();
+    });
+
+    document.addEventListener("keydown", function(e){
+      if(e.key !== "/") return;
+      var active = document.activeElement;
+      var isTyping = active && (active.tagName === "INPUT" || active.tagName === "TEXTAREA");
+      var dashboardActive = document.getElementById("panel-dashboard").classList.contains("active");
+      if(!isTyping && dashboardActive){
+        e.preventDefault();
+        document.getElementById("search-input").focus();
+      }
+    });
+
+    window.addEventListener("resize", function(){
+      var active = document.querySelector(".tab-btn.active");
+      if(active) moveIndicator(active);
+    });
+
+    renderDashboard();
+    requestAnimationFrame(function(){ moveIndicator(document.querySelector(".tab-btn.active")); });
+  }
+
+  document.addEventListener("DOMContentLoaded", init);
+})();
+</script>
+</body>
+</html>
